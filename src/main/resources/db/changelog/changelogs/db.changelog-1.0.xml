@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+    <changeSet id="1" author="snezha">
+        <createTable tableName="quotes">
+
+            <column name="name" type="VARCHAR(50)">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="price" type="INT(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="removed" type="BIT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="remove_date" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="snezha">
+        <createTable tableName="items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="item_id" type="INT(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="quote_name" type="VARCHAR(50)">
+                <constraints foreignKeyName="item_quote_name" references="quotes(name)"/>
+            </column>
+
+            <column name="removed" type="BIT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="remove_date" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="3" author="snezha">
+        <createTable tableName="quote_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="quote_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="message" type="VARCHAR(250)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="error_code" type="INT(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="operation" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_date" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+</databaseChangeLog>
