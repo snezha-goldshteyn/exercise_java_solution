@@ -4,6 +4,7 @@ import com.exercise.logs.service.LogService;
 import com.exercise.quotes.dto.ErrorDtoResponse;
 import com.exercise.quotes.dto.QuoteDto;
 import com.exercise.quotes.entities.operation.Operation;
+import com.exercise.quotes.exceptions.QuoteException;
 import com.exercise.quotes.service.QuotesService;
 import com.exercise.quotes.validation.InputValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,21 +32,13 @@ public class QuoteController {
     @PostMapping(ADD_QUOTE)
     @SneakyThrows
     public String saveQuote(@RequestBody QuoteDto quoteDto) {
-        boolean result = false;
         try {
             InputValidator.validate(quoteDto);
-            result = service.addQuote(quoteDto);
-        } catch (Exception e) {
+            service.addQuote(quoteDto);
+        } catch (QuoteException e) {
             ErrorDtoResponse response = ErrorDtoResponse.builder()
-                    .errorCode(3).description(e.getMessage())
+                    .errorCode(e.getErrorCode()).description(e.getMessage())
                     .level("error").build();
-            logErrors(Operation.CREATE, quoteDto.getName(), response);
-            return mapper.writeValueAsString(response);
-        }
-        if (!result) {
-            ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(1).
-                    description("quote already exists").
-                    level("error").build();
             logErrors(Operation.CREATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
         }
@@ -56,19 +49,11 @@ public class QuoteController {
     @DeleteMapping(DELETE_QUOTE)
     @SneakyThrows
     public String deleteQuote(@RequestParam String quoteName) {
-        boolean result = false;
         try {
-            result = service.removeQuote(quoteName);
-        } catch (Exception e) {
+            service.removeQuote(quoteName);
+        } catch (QuoteException e) {
             ErrorDtoResponse response = ErrorDtoResponse.builder()
-                    .errorCode(3).description(e.getMessage())
-                    .level("error").build();
-            logErrors(Operation.DELETE, quoteName, response);
-            return mapper.writeValueAsString(response);
-        }
-        if (!result) {
-            ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(2)
-                    .description("quote not exists")
+                    .errorCode(e.getErrorCode()).description(e.getMessage())
                     .level("error").build();
             logErrors(Operation.DELETE, quoteName, response);
             return mapper.writeValueAsString(response);
@@ -82,17 +67,11 @@ public class QuoteController {
     public String updateQuote(@RequestBody QuoteDto quoteDto) {
         boolean result = false;
         try {
-            result = service.updateQuote(quoteDto);
-        } catch (Exception e) {
+            InputValidator.validate(quoteDto);
+            service.updateQuote(quoteDto);
+        } catch (QuoteException e) {
             ErrorDtoResponse response = ErrorDtoResponse.builder()
-                    .errorCode(3).description(e.getMessage())
-                    .level("error").build();
-            logErrors(Operation.UPDATE, quoteDto.getName(), response);
-            return mapper.writeValueAsString(response);
-        }
-        if (!result) {
-            ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(2)
-                    .description("quote not exists")
+                    .errorCode(e.getErrorCode()).description(e.getMessage())
                     .level("error").build();
             logErrors(Operation.UPDATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
@@ -107,7 +86,7 @@ public class QuoteController {
         QuoteDto quoteDto;
         try {
             quoteDto = service.getQuote(quoteName);
-        } catch (Exception e) {
+        } catch (QuoteException e) {
             ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(1).
                     description(e.getMessage()).
                     level("error").build();

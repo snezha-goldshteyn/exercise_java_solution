@@ -1,5 +1,6 @@
 package com.exercise.quotes.service;
 
+import com.exercise.quotes.exceptions.QuoteException;
 import com.exercise.quotes.dto.ItemDto;
 import com.exercise.quotes.dto.QuoteDto;
 import com.exercise.quotes.entities.Item;
@@ -33,7 +34,7 @@ public class QuoteServiceImpl implements QuotesService {
     public QuoteDto getQuote(String name) {
         Quote quote = getQuoteFromRepo(name);
         if (quote.isRemoved()) {
-            throw new IllegalArgumentException("This quote " + name + " is deleted at" + quote.getRemoveDate());
+            throw new QuoteException("This quote " + name + " is deleted at" + quote.getRemoveDate(), 3);
         }
         List<Item> items = getItemsByQuoteName(name).stream()
                 .filter(item -> !item.isRemoved())
@@ -49,7 +50,7 @@ public class QuoteServiceImpl implements QuotesService {
         if (quotesRepository.existsById(quote.getName())) {
             Quote actualQuote = getQuoteFromRepo(quote.getName());
             if (!actualQuote.isRemoved()) {
-                return false;
+                throw new QuoteException("Quote already exists", 1);
             }
             rebuildQuote(actualQuote);
             return true;
@@ -75,11 +76,11 @@ public class QuoteServiceImpl implements QuotesService {
     @Transactional
     public boolean removeQuote(String name) {
         if (!quotesRepository.existsById(name)) {
-            return false;
+            throw new QuoteException("Quote not exists", 2);
         }
         Quote quote = getQuoteFromRepo(name);
         if (quote.isRemoved()) {
-            throw new IllegalArgumentException("This quote " + name + " is deleted at " + quote.getRemoveDate());
+            throw new QuoteException("This quote " + name + " is deleted at " + quote.getRemoveDate(), 3);
         }
         List<Item> items = getItemsByQuoteName(name);
         deleteItems(items);
@@ -92,12 +93,12 @@ public class QuoteServiceImpl implements QuotesService {
     @Transactional
     public boolean updateQuote(QuoteDto quoteDto) {
         if (!quotesRepository.existsById(quoteDto.getName())) {
-            return false;
+            throw new QuoteException("Quote not exists", 2);
         }
         String quoteName = quoteDto.getName();
         Quote quote = getQuoteFromRepo(quoteName);
         if (quote.isRemoved()) {
-            return false;
+            throw new QuoteException("This quote " + quoteName + " is deleted at " + quote.getRemoveDate(), 3);
         }
         List<Item> currentItems = getItemsByQuoteName(quoteName);
         List<Item> newItems = quoteDto.getItems().stream()
