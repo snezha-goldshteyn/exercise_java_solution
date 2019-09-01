@@ -30,28 +30,26 @@ public class QuoteController {
 
     @PostMapping(ADD_QUOTE)
     @SneakyThrows
-    public String saveQuote(@RequestBody QuoteDto quotedto) {
+    public String saveQuote(@RequestBody QuoteDto quoteDto) {
         boolean result = false;
         try {
-            InputValidator.validate(quotedto);
-            result = service.addQuote(quotedto);
+            InputValidator.validate(quoteDto);
+            result = service.addQuote(quoteDto);
         } catch (Exception e) {
-            logService.addQuoteLog(Operation.CREATE, quotedto.getName(), 3, e.getMessage());
-            log.error(e.getMessage());
             ErrorDtoResponse response = ErrorDtoResponse.builder()
                     .errorCode(3).description(e.getMessage())
                     .level("error").build();
+            logErrors(Operation.CREATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
         }
         if (!result) {
             ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(1).
                     description("quote already exists").
                     level("error").build();
-            logService.addQuoteLog(Operation.CREATE, quotedto.getName(), 1, response.getDescription());
-            log.error(response.getDescription());
+            logErrors(Operation.CREATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
         }
-        logService.addQuoteLog(Operation.CREATE, quotedto.getName(), 0, "Success");
+        logSuccess(Operation.CREATE, quoteDto.getName());
         return "OK";
     }
 
@@ -62,22 +60,20 @@ public class QuoteController {
         try {
             result = service.removeQuote(quoteName);
         } catch (Exception e) {
-            logService.addQuoteLog(Operation.DELETE, quoteName, 3, e.getMessage());
-            log.error(e.getMessage());
             ErrorDtoResponse response = ErrorDtoResponse.builder()
                     .errorCode(3).description(e.getMessage())
                     .level("error").build();
+            logErrors(Operation.DELETE, quoteName, response);
             return mapper.writeValueAsString(response);
         }
         if (!result) {
             ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(2)
                     .description("quote not exists")
                     .level("error").build();
-            logService.addQuoteLog(Operation.DELETE, quoteName, 2, response.getDescription());
-            log.error(response.getDescription());
+            logErrors(Operation.DELETE, quoteName, response);
             return mapper.writeValueAsString(response);
         }
-        logService.addQuoteLog(Operation.DELETE, quoteName, 0, "Success");
+        logSuccess(Operation.DELETE, quoteName);
         return "OK";
     }
 
@@ -88,22 +84,20 @@ public class QuoteController {
         try {
             result = service.updateQuote(quoteDto);
         } catch (Exception e) {
-            logService.addQuoteLog(Operation.UPDATE, quoteDto.getName(), 3, e.getMessage());
-            log.error(e.getMessage());
             ErrorDtoResponse response = ErrorDtoResponse.builder()
                     .errorCode(3).description(e.getMessage())
                     .level("error").build();
+            logErrors(Operation.UPDATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
         }
         if (!result) {
             ErrorDtoResponse response = ErrorDtoResponse.builder().errorCode(2)
                     .description("quote not exists")
                     .level("error").build();
-            logService.addQuoteLog(Operation.UPDATE, quoteDto.getName(), 2, response.getDescription());
-            log.error(response.getDescription());
+            logErrors(Operation.UPDATE, quoteDto.getName(), response);
             return mapper.writeValueAsString(response);
         }
-        logService.addQuoteLog(Operation.UPDATE, quoteDto.getName(), 0, "Success");
+        logSuccess(Operation.UPDATE, quoteDto.getName());
         return "OK";
     }
 
@@ -128,5 +122,14 @@ public class QuoteController {
     public String getAllQuotes() {
         List<QuoteDto> allQuotes = service.getAllQuotes();
         return mapper.writeValueAsString(allQuotes);
+    }
+
+    private void logErrors(Operation operation, String quoteName, ErrorDtoResponse response) {
+        logService.addQuoteLog(operation, quoteName, response.getErrorCode(), response.getDescription());
+        log.error(response.getDescription());
+    }
+
+    private void logSuccess(Operation create, String quoteName) {
+        logService.addQuoteLog(Operation.CREATE, quoteName, 0, "Success");
     }
 }
